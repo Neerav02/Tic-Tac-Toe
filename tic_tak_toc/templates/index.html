@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe Game</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="game-container">
+        <h1>Tic-Tac-Toe</h1>
+        <p>Turn: {{ 'X' if turn == 'X' else 'O' }}</p>
+        <div class="board">
+            {% for i in range(3) %}
+                <div class="row">
+                    {% for j in range(3) %}
+                        <button class="cell" id="cell-{{ i }}-{{ j }}" onclick="makeMove({{ i }}, {{ j }})">
+                            {{ board[i][j] }}
+                        </button>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+        {% if winner %}
+            <div class="winner">
+                <h2>{{ winner }} wins!</h2>
+            </div>
+        {% endif %}
+        <button onclick="resetGame()">Reset Game</button>
+    </div>
+
+    <script>
+        function makeMove(row, col) {
+            fetch(`/move/${row}/${col}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                const board = data.board;
+                const winner = data.winner;
+                const turn = data.turn;
+                // Update board in the frontend
+                for (let i = 0; i < 3; i++) {
+                    for (let j = 0; j < 3; j++) {
+                        document.getElementById(`cell-${i}-${j}`).innerText = board[i][j];
+                    }
+                }
+
+                // Update turn and winner in the frontend
+                if (winner) {
+                    alert(`${winner} wins!`);
+                }
+
+                if (turn) {
+                    document.querySelector('p').innerText = `Turn: ${turn}`;
+                }
+            });
+        }
+
+        function resetGame() {
+            fetch('/reset', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                const board = data.board;
+                // Reset board display
+                for (let i = 0; i < 3; i++) {
+                    for (let j = 0; j < 3; j++) {
+                        document.getElementById(`cell-${i}-${j}`).innerText = '';
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
